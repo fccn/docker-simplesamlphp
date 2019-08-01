@@ -1,0 +1,44 @@
+#
+# Simple nginx webserver with simplesaml configuration
+#
+version: '3.4'
+services:
+
+  nginx:
+    image: stvfccn/nginx_proxy
+    container_name: nginx_proxy
+    restart: always
+    depends_on:
+      - simplesamlphp
+    ports:
+      - "11080:80"
+      - "11443:443"
+    volumes:
+      - ./config/sites-enabled:/opt/nginx/sites-enabled
+      - ./certs:/opt/nginx/ssl
+      - ./config/conf.d:/opt/nginx/conf.d
+      - ./webcontent:/var/www
+      - samlweb:/var/simplesaml/www    #web contents for webserver access
+
+  simplesamlphp:
+    image: simplesamlphp
+    container_name: simplesamlphp
+    restart: always
+    volumes:
+      - ./webcontent:/var/www          #for accessing test php page
+      #- ./simplesaml:/opt/simplesaml   #simplesaml specific configs
+      - samlweb:/var/simplesaml/www    #web contents for webserver access
+      - samlopts:/opt/simplesaml
+
+volumes:
+  samlweb:
+    name: simplesaml_web
+
+#--- optional way to configure simpleSAML options folder
+  samlopts:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/opt/base_images/simplesamlphp_fpm/test/simplesaml'
+    name: simplesaml_opts
